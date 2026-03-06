@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Globe, Palette, Sun, Moon, TreePine, Sunset } from "lucide-react";
+import { Globe, Palette, Sun, Moon, TreePine, Sunset, Volume2, VolumeX, Music } from "lucide-react";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
 import { useCountdown } from "@/hooks/useCountdown";
 import { translations, type Language } from "@/lib/translations";
-
+import { playTick, toggleAmbient, getAmbientState } from "@/lib/sounds";
 type Theme = "light" | "dark" | "sunset" | "forest";
 
 const themeIcons: Record<Theme, typeof Sun> = {
@@ -19,9 +19,16 @@ const Index = () => {
   const [lang, setLang] = useState<Language>("ar");
   const [theme, setTheme] = useState<Theme>("light");
   const [showControls, setShowControls] = useState(false);
+  const [tickSound, setTickSound] = useState(false);
+  const [ambientOn, setAmbientOn] = useState(false);
   const t = translations[lang];
   const isRtl = lang === "ar";
-  const timeLeft = useCountdown();
+
+  const handleTick = useCallback(() => {
+    if (tickSound) playTick();
+  }, [tickSound]);
+
+  const timeLeft = useCountdown(handleTick);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -71,6 +78,20 @@ const Index = () => {
           className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
         >
           <Globe className="w-5 h-5 text-foreground" />
+        </button>
+        <button
+          onClick={() => setTickSound(!tickSound)}
+          className={`glass-effect rounded-xl p-3 hover:scale-105 transition-transform ${tickSound ? "ring-2 ring-primary" : ""}`}
+          title={t.sound}
+        >
+          {tickSound ? <Volume2 className="w-5 h-5 text-foreground" /> : <VolumeX className="w-5 h-5 text-foreground" />}
+        </button>
+        <button
+          onClick={() => setAmbientOn(toggleAmbient())}
+          className={`glass-effect rounded-xl p-3 hover:scale-105 transition-transform ${ambientOn ? "ring-2 ring-accent" : ""}`}
+          title={t.ambient}
+        >
+          <Music className={`w-5 h-5 ${ambientOn ? "text-accent" : "text-foreground"}`} />
         </button>
       </motion.div>
 
