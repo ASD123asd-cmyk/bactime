@@ -1,6 +1,6 @@
 export type Language = "ar" | "fr" | "en";
 
-export const translations: Record<Language, Record<string, string>> = {
+export const translations: Record<Language, Record<string, string | string[]>> = {
   ar: {
     title: "العد التنازلي لامتحان البكالوريا",
     subtitle: "المغرب - دورة 2026",
@@ -10,6 +10,16 @@ export const translations: Record<Language, Record<string, string>> = {
     seconds: "ثانية",
     examDate: "تاريخ الامتحان: 4 يونيو 2026",
     motivation: "كل ثانية تمر هي فرصة للاستعداد 💪",
+    motivations: [
+      "كل ثانية تمر هي فرصة للاستعداد 💪",
+      "النجاح يبدأ بقرار، والمثابرة تصنع الفرق 🌟",
+      "لا تستسلم، أنت أقرب مما تظن 🔥",
+      "الاجتهاد اليوم يصنع نجاح الغد 📚",
+      "ثق بنفسك، فأنت قادر على التفوق ✨",
+      "كل مجتهد نصيبه النجاح 🏆",
+      "الطريق إلى القمة يبدأ بخطوة 🚀",
+      "راجع، تدرب، وتفوق! 💯",
+    ],
     goodLuck: "بالتوفيق والنجاح إن شاء الله ✨",
     sound: "الصوت",
     soundOn: "تشغيل",
@@ -31,6 +41,16 @@ export const translations: Record<Language, Record<string, string>> = {
     seconds: "Secondes",
     examDate: "Date de l'examen : 4 Juin 2026",
     motivation: "Chaque seconde compte, préparez-vous ! 💪",
+    motivations: [
+      "Chaque seconde compte, préparez-vous ! 💪",
+      "Le succès est le fruit du travail acharné 🌟",
+      "N'abandonnez jamais, vous êtes si proche 🔥",
+      "Révisez aujourd'hui pour réussir demain 📚",
+      "Croyez en vous, vous pouvez exceller ✨",
+      "La persévérance mène à la réussite 🏆",
+      "Le chemin vers le sommet commence ici 🚀",
+      "Révisez, pratiquez, excellez ! 💯",
+    ],
     goodLuck: "Bonne chance à tous ✨",
     sound: "Son",
     soundOn: "Activé",
@@ -52,6 +72,16 @@ export const translations: Record<Language, Record<string, string>> = {
     seconds: "Seconds",
     examDate: "Exam Date: June 4, 2026",
     motivation: "Every second counts, keep preparing! 💪",
+    motivations: [
+      "Every second counts, keep preparing! 💪",
+      "Success is built one step at a time 🌟",
+      "Don't give up, you're closer than you think 🔥",
+      "Study hard today, celebrate tomorrow 📚",
+      "Believe in yourself, you can excel ✨",
+      "Hard work always pays off 🏆",
+      "The journey to the top starts now 🚀",
+      "Review, practice, and shine! 💯",
+    ],
     goodLuck: "Good luck to everyone ✨",
     sound: "Sound",
     soundOn: "On",
