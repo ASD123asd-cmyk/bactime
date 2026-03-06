@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-const TARGET_DATE = new Date("2026-06-04T08:00:00+01:00"); // Morocco time
+const TARGET_DATE = new Date("2026-06-04T08:00:00+01:00");
 
 interface TimeLeft {
   days: number;
@@ -9,8 +9,10 @@ interface TimeLeft {
   seconds: number;
 }
 
-export const useCountdown = (): TimeLeft => {
+export const useCountdown = (onTick?: () => void): TimeLeft => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculate());
+  const onTickRef = useRef(onTick);
+  onTickRef.current = onTick;
 
   function calculate(): TimeLeft {
     const diff = TARGET_DATE.getTime() - Date.now();
@@ -24,7 +26,10 @@ export const useCountdown = (): TimeLeft => {
   }
 
   useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(calculate()), 1000);
+    const timer = setInterval(() => {
+      setTimeLeft(calculate());
+      onTickRef.current?.();
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
