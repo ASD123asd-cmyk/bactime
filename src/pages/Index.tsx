@@ -5,6 +5,7 @@ import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
 import TipsSection from "@/components/TipsSection";
 import ShareButtons from "@/components/ShareButtons";
+import ProgressBar from "@/components/ProgressBar";
 import { useCountdown } from "@/hooks/useCountdown";
 import { translations, type Language } from "@/lib/translations";
 import { playTick, toggleAmbient } from "@/lib/sounds";
@@ -205,8 +206,21 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {/* Tips & Subjects */}
+      {/* Progress bar & Tips & Subjects */}
       <div className="relative z-10 w-full">
+        <ProgressBar
+          label={t("progressLabel")}
+          percentage={(() => {
+            // From ~1 year before exam to exam day
+            const start = new Date("2025-06-04T00:00:00+01:00").getTime();
+            const end = new Date("2026-06-04T08:00:00+01:00").getTime();
+            const now = Date.now();
+            const elapsed = now - start;
+            const total = end - start;
+            return Math.min(100, Math.max(0, (elapsed / total) * 100));
+          })()}
+          isRtl={isRtl}
+        />
         <TipsSection
           tipsTitle={t("tipsTitle")}
           tips={arr("tips")}
