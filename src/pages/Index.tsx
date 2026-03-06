@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Globe, Palette, Sun, Moon, TreePine, Sunset, Volume2, VolumeX, Music } from "lucide-react";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
+import TipsSection from "@/components/TipsSection";
+import ShareButtons from "@/components/ShareButtons";
 import { useCountdown } from "@/hooks/useCountdown";
 import { translations, type Language } from "@/lib/translations";
 import { playTick, toggleAmbient } from "@/lib/sounds";
@@ -29,7 +31,11 @@ const Index = () => {
     const val = tr[key];
     return typeof val === "string" ? val : "";
   };
-  const motivations = tr.motivations as string[];
+  const arr = (key: string) => {
+    const val = tr[key];
+    return Array.isArray(val) ? val : [];
+  };
+  const motivations = arr("motivations");
   const isRtl = lang === "ar";
 
   const handleTick = useCallback(() => {
@@ -38,7 +44,6 @@ const Index = () => {
 
   const timeLeft = useCountdown(handleTick);
 
-  // Rotate motivational messages every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setMotIdx((prev) => (prev + 1) % motivations.length);
@@ -49,14 +54,10 @@ const Index = () => {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("dark", "theme-sunset", "theme-forest");
-    root.removeAttribute("dir");
-
     if (theme === "dark") root.classList.add("dark");
     else if (theme === "sunset") root.classList.add("theme-sunset");
     else if (theme === "forest") root.classList.add("theme-forest");
-
-    if (isRtl) root.setAttribute("dir", "rtl");
-    else root.setAttribute("dir", "ltr");
+    root.setAttribute("dir", isRtl ? "rtl" : "ltr");
   }, [theme, isRtl]);
 
   const themes: Theme[] = ["light", "dark", "sunset", "forest"];
@@ -66,8 +67,10 @@ const Index = () => {
     { code: "en", label: "English" },
   ];
 
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden transition-colors duration-500">
+    <div className="relative min-h-screen flex flex-col items-center overflow-hidden transition-colors duration-500 pb-24 pt-20">
       <Particles />
       <div className="glow-effect fixed inset-0 pointer-events-none z-0" />
 
@@ -140,19 +143,19 @@ const Index = () => {
       )}
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full">
+      <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full mt-8">
         <motion.div
           className="text-center mb-10"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h1
+          <h1
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gradient leading-tight mb-3"
             style={{ fontFamily: isRtl ? "var(--font-arabic)" : "var(--font-display)" }}
           >
             {t("title")}
-          </motion.h1>
+          </h1>
           <motion.p
             className="text-lg sm:text-xl text-muted-foreground font-medium"
             initial={{ opacity: 0 }}
@@ -200,6 +203,25 @@ const Index = () => {
           </div>
           <p className="text-sm text-muted-foreground">{t("goodLuck")}</p>
         </motion.div>
+      </div>
+
+      {/* Tips & Subjects */}
+      <div className="relative z-10 w-full">
+        <TipsSection
+          tipsTitle={t("tipsTitle")}
+          tips={arr("tips")}
+          subjectsTitle={t("subjectsTitle")}
+          subjects={arr("subjects")}
+          isRtl={isRtl}
+        />
+
+        {/* Share */}
+        <ShareButtons
+          title={t("shareTitle")}
+          shareText={t("shareText")}
+          url={siteUrl}
+          isRtl={isRtl}
+        />
       </div>
 
       {/* Language indicator */}
