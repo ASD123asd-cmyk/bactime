@@ -49,6 +49,7 @@ export const translations: Record<Language, Record<string, string | string[]>> =
     ],
     shareTitle: "شارك مع أصدقائك",
     shareText: "العد التنازلي لامتحان البكالوريا 2026 - المغرب",
+    developerCredit: "تم التطوير بواسطة حمزة",
   },
   fr: {
     title: "Compte à Rebours du Baccalauréat",
@@ -98,6 +99,7 @@ export const translations: Record<Language, Record<string, string | string[]>> =
     ],
     shareTitle: "Partagez avec vos amis",
     shareText: "Compte à rebours du Baccalauréat 2026 - Maroc",
+    developerCredit: "Développé par Hamza",
   },
   en: {
     title: "Baccalaureate Exam Countdown",
@@ -147,5 +149,6 @@ export const translations: Record<Language, Record<string, string | string[]>> =
     ],
     shareTitle: "Share with friends",
     shareText: "Baccalaureate Exam Countdown 2026 - Morocco",
+    developerCredit: "Developed by Hamza",
   },
 };
