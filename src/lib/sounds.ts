@@ -64,3 +64,24 @@ export const toggleAmbient = (): boolean => {
 };
 
 export const getAmbientState = () => isAmbientPlaying;
+
+// Bell ring for pomodoro transitions
+export const playBell = (highPitch = false) => {
+  const ctx = getAudioContext();
+  const baseFreq = highPitch ? 880 : 587.33;
+  const frequencies = [baseFreq, baseFreq * 1.5, baseFreq * 2];
+  frequencies.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = "sine";
+    const start = ctx.currentTime + i * 0.15;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, start + 1.2);
+    osc.start(start);
+    osc.stop(start + 1.3);
+  });
+};
