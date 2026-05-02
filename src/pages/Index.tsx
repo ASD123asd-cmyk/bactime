@@ -1,28 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Palette, Sun, Moon, TreePine, Sunset, Volume2, VolumeX, Music } from "lucide-react";
+import { Globe, Volume2, VolumeX, Music } from "lucide-react";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
 import TipsSection from "@/components/TipsSection";
 import ShareButtons from "@/components/ShareButtons";
 import ProgressBar from "@/components/ProgressBar";
+import Pomodoro from "@/components/Pomodoro";
 import { useCountdown } from "@/hooks/useCountdown";
 import { translations, type Language } from "@/lib/translations";
 import { playTick, toggleAmbient } from "@/lib/sounds";
 
-type Theme = "light" | "dark" | "sunset" | "forest";
-
-const themeIcons: Record<Theme, typeof Sun> = {
-  light: Sun,
-  dark: Moon,
-  sunset: Sunset,
-  forest: TreePine,
-};
-
 const Index = () => {
   const [lang, setLang] = useState<Language>("ar");
-  const [theme, setTheme] = useState<Theme>("light");
-  const [showControls, setShowControls] = useState(false);
   const [tickSound, setTickSound] = useState(false);
   const [ambientOn, setAmbientOn] = useState(false);
   const [motIdx, setMotIdx] = useState(0);
@@ -52,16 +42,14 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [motivations.length]);
 
+  // Force dark theme always
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("dark", "theme-sunset", "theme-forest");
-    if (theme === "dark") root.classList.add("dark");
-    else if (theme === "sunset") root.classList.add("theme-sunset");
-    else if (theme === "forest") root.classList.add("theme-forest");
+    root.classList.remove("theme-sunset", "theme-forest");
+    root.classList.add("dark");
     root.setAttribute("dir", isRtl ? "rtl" : "ltr");
-  }, [theme, isRtl]);
+  }, [isRtl]);
 
-  const themes: Theme[] = ["light", "dark", "sunset", "forest"];
   const languages: { code: Language; label: string }[] = [
     { code: "ar", label: "العربية" },
     { code: "fr", label: "Français" },
@@ -71,7 +59,7 @@ const Index = () => {
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center overflow-hidden transition-colors duration-500 pb-24 pt-20">
+    <div className="relative min-h-screen flex flex-col items-center overflow-hidden pb-24 pt-20">
       <Particles />
       <div className="glow-effect fixed inset-0 pointer-events-none z-0" />
 
@@ -82,12 +70,6 @@ const Index = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <button
-          onClick={() => setShowControls(!showControls)}
-          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
-        >
-          <Palette className="w-5 h-5 text-foreground" />
-        </button>
         <button
           onClick={() => {
             const idx = languages.findIndex((l) => l.code === lang);
@@ -112,36 +94,6 @@ const Index = () => {
           <Music className={`w-5 h-5 ${ambientOn ? "text-accent" : "text-foreground"}`} />
         </button>
       </motion.div>
-
-      {/* Theme selector dropdown */}
-      {showControls && (
-        <motion.div
-          className="fixed top-16 right-4 z-50 glass-effect rounded-xl p-3 flex flex-col gap-2"
-          initial={{ opacity: 0, scale: 0.9, y: -10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-        >
-          {themes.map((th) => {
-            const Icon = themeIcons[th];
-            return (
-              <button
-                key={th}
-                onClick={() => {
-                  setTheme(th);
-                  setShowControls(false);
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  theme === th
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-secondary text-foreground"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {t(th)}
-              </button>
-            );
-          })}
-        </motion.div>
-      )}
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full mt-8">
@@ -206,21 +158,20 @@ const Index = () => {
         </motion.div>
       </div>
 
-      {/* Progress bar & Tips & Subjects */}
       <div className="relative z-10 w-full">
         <ProgressBar
           label={t("progressLabel")}
           percentage={(() => {
-            // From ~1 year before exam to exam day
             const start = new Date("2025-06-04T00:00:00+01:00").getTime();
             const end = new Date("2026-06-04T08:00:00+01:00").getTime();
             const now = Date.now();
-            const elapsed = now - start;
-            const total = end - start;
-            return Math.min(100, Math.max(0, (elapsed / total) * 100));
+            return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
           })()}
           isRtl={isRtl}
         />
+
+        <Pomodoro isRtl={isRtl} t={t} />
+
         <TipsSection
           tipsTitle={t("tipsTitle")}
           tips={arr("tips")}
@@ -229,7 +180,6 @@ const Index = () => {
           isRtl={isRtl}
         />
 
-        {/* Share */}
         <ShareButtons
           title={t("shareTitle")}
           shareText={t("shareText")}
