@@ -1,20 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Volume2, VolumeX, Music } from "lucide-react";
+import { Globe, Volume2, VolumeX } from "lucide-react";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
-import TipsSection from "@/components/TipsSection";
 import ShareButtons from "@/components/ShareButtons";
 import ProgressBar from "@/components/ProgressBar";
 import Pomodoro from "@/components/Pomodoro";
 import { useCountdown } from "@/hooks/useCountdown";
 import { translations, type Language } from "@/lib/translations";
-import { playTick, toggleAmbient } from "@/lib/sounds";
+import { playTick } from "@/lib/sounds";
 
 const Index = () => {
   const [lang, setLang] = useState<Language>("ar");
   const [tickSound, setTickSound] = useState(false);
-  const [ambientOn, setAmbientOn] = useState(false);
   const [motIdx, setMotIdx] = useState(0);
 
   const tr = translations[lang];
@@ -85,13 +83,6 @@ const Index = () => {
           title={t("sound")}
         >
           {tickSound ? <Volume2 className="w-5 h-5 text-foreground" /> : <VolumeX className="w-5 h-5 text-foreground" />}
-        </button>
-        <button
-          onClick={() => setAmbientOn(toggleAmbient())}
-          className={`glass-effect rounded-xl p-3 hover:scale-105 transition-transform ${ambientOn ? "ring-2 ring-accent" : ""}`}
-          title={t("ambient")}
-        >
-          <Music className={`w-5 h-5 ${ambientOn ? "text-accent" : "text-foreground"}`} />
         </button>
       </motion.div>
 
@@ -171,14 +162,6 @@ const Index = () => {
         />
 
         <Pomodoro isRtl={isRtl} t={t} />
-
-        <TipsSection
-          tipsTitle={t("tipsTitle")}
-          tips={arr("tips")}
-          subjectsTitle={t("subjectsTitle")}
-          subjects={arr("subjects")}
-          isRtl={isRtl}
-        />
 
         <ShareButtons
           title={t("shareTitle")}
