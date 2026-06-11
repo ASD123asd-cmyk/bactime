@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe, Volume2, VolumeX } from "lucide-react";
 import CountdownUnit from "@/components/CountdownUnit";
@@ -6,14 +6,44 @@ import Particles from "@/components/Particles";
 import ShareButtons from "@/components/ShareButtons";
 import ProgressBar from "@/components/ProgressBar";
 import Pomodoro from "@/components/Pomodoro";
+import ExamSettings from "@/components/ExamSettings";
 import { useCountdown } from "@/hooks/useCountdown";
 import { translations, type Language } from "@/lib/translations";
-import { playTick } from "@/lib/sounds";
+import { playTick, playBell } from "@/lib/sounds";
+import { toast } from "sonner";
+
+const DEFAULT_TARGET = "2027-06-08T08:00:00+01:00";
+const DEFAULT_REMINDERS = [60, 10];
+
+const loadTarget = (): Date => {
+  try {
+    const s = localStorage.getItem("examTarget");
+    if (s) {
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) return d;
+    }
+  } catch {}
+  return new Date(DEFAULT_TARGET);
+};
+
+const loadReminders = (): number[] => {
+  try {
+    const s = localStorage.getItem("examReminders");
+    if (s) return JSON.parse(s);
+  } catch {}
+  return DEFAULT_REMINDERS;
+};
 
 const Index = () => {
   const [lang, setLang] = useState<Language>("ar");
   const [tickSound, setTickSound] = useState(false);
   const [motIdx, setMotIdx] = useState(0);
+  const [targetDate, setTargetDate] = useState<Date>(loadTarget);
+  const [reminders, setReminders] = useState<number[]>(loadReminders);
+  const [notifEnabled, setNotifEnabled] = useState(
+    typeof Notification !== "undefined" && Notification.permission === "granted"
+  );
+  const firedRef = useRef<Set<string>>(new Set());
 
   const tr = translations[lang];
   const t = (key: string) => {
@@ -27,11 +57,51 @@ const Index = () => {
   const motivations = arr("motivations");
   const isRtl = lang === "ar";
 
-  const handleTick = useCallback(() => {
-    if (tickSound) playTick();
-  }, [tickSound]);
+  // Reset fired reminders when target changes
+  useEffect(() => {
+    firedRef.current = new Set();
+  }, [targetDate]);
 
-  const timeLeft = useCountdown(handleTick);
+  const fireReminder = useCallback(
+    (m: number) => {
+      const key = `${targetDate.getTime()}-${m}`;
+      if (firedRef.current.has(key)) return;
+      firedRef.current.add(key);
+
+      const msg =
+        m >= 60 && m % 60 === 0
+          ? `${m / 60} ${t("hoursShort")} ${t("reminderSuffix")}`
+          : `${m} ${t("minutesShort")} ${t("reminderSuffix")}`;
+
+      try {
+        playBell(true);
+      } catch {}
+      toast(t("reminderTitle"), { description: msg });
+      if (notifEnabled && "Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification(t("reminderTitle"), { body: msg });
+        } catch {}
+      }
+    },
+    [targetDate, notifEnabled, t]
+  );
+
+  const handleTick = useCallback(
+    (msLeft: number) => {
+      if (tickSound) playTick();
+      if (msLeft <= 0) return;
+      reminders.forEach((m) => {
+        const offsetMs = m * 60 * 1000;
+        // Fire when remaining drops at/below the offset, but still positive
+        if (msLeft <= offsetMs && msLeft > offsetMs - 2000) {
+          fireReminder(m);
+        }
+      });
+    },
+    [tickSound, reminders, fireReminder]
+  );
+
+  const timeLeft = useCountdown(targetDate, handleTick);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -40,13 +110,27 @@ const Index = () => {
     return () => clearInterval(interval);
   }, [motivations.length]);
 
-  // Force dark theme always
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("theme-sunset", "theme-forest");
     root.classList.add("dark");
     root.setAttribute("dir", isRtl ? "rtl" : "ltr");
   }, [isRtl]);
+
+  const saveTarget = (d: Date) => {
+    setTargetDate(d);
+    try {
+      localStorage.setItem("examTarget", d.toISOString());
+    } catch {}
+    toast(t("examDateUpdated"));
+  };
+
+  const saveReminders = (r: number[]) => {
+    setReminders(r);
+    try {
+      localStorage.setItem("examReminders", JSON.stringify(r));
+    } catch {}
+  };
 
   const languages: { code: Language; label: string }[] = [
     { code: "ar", label: "العربية" },
@@ -56,12 +140,26 @@ const Index = () => {
 
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
 
+  const examDateLabel = useMemo(
+    () =>
+      targetDate.toLocaleDateString(isRtl ? "ar-MA" : lang === "fr" ? "fr-FR" : "en-GB", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    [targetDate, lang, isRtl]
+  );
+
+  const progressStart = useMemo(() => {
+    const oneYear = 365 * 24 * 60 * 60 * 1000;
+    return targetDate.getTime() - oneYear;
+  }, [targetDate]);
+
   return (
     <div className="relative min-h-screen flex flex-col items-center overflow-hidden pb-24 pt-20">
       <Particles />
       <div className="glow-effect fixed inset-0 pointer-events-none z-0" />
 
-      {/* Controls */}
       <motion.div
         className="fixed top-4 right-4 z-50 flex gap-2"
         initial={{ y: -20, opacity: 0 }}
@@ -86,7 +184,6 @@ const Index = () => {
         </button>
       </motion.div>
 
-      {/* Main content */}
       <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full mt-8">
         <motion.div
           className="text-center mb-10"
@@ -129,7 +226,7 @@ const Index = () => {
           transition={{ delay: 0.6 }}
         >
           <p className="text-sm sm:text-base text-muted-foreground font-medium">
-            📅 {t("examDate")}
+            📅 {t("examDateLabel")}: {examDateLabel}
           </p>
           <div className="h-8 flex items-center justify-center">
             <AnimatePresence mode="wait">
@@ -150,13 +247,23 @@ const Index = () => {
       </div>
 
       <div className="relative z-10 w-full">
+        <ExamSettings
+          targetDate={targetDate}
+          onSave={saveTarget}
+          reminders={reminders}
+          onRemindersChange={saveReminders}
+          notifEnabled={notifEnabled}
+          onToggleNotif={setNotifEnabled}
+          isRtl={isRtl}
+          t={t}
+        />
+
         <ProgressBar
           label={t("progressLabel")}
           percentage={(() => {
-            const start = new Date("2026-06-08T00:00:00+01:00").getTime();
-            const end = new Date("2027-06-08T08:00:00+01:00").getTime();
+            const end = targetDate.getTime();
             const now = Date.now();
-            return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+            return Math.min(100, Math.max(0, ((now - progressStart) / (end - progressStart)) * 100));
           })()}
           isRtl={isRtl}
         />
@@ -171,7 +278,6 @@ const Index = () => {
         />
       </div>
 
-      {/* Developer credit */}
       <motion.div
         className="w-full max-w-4xl mx-auto mt-8 px-4"
         initial={{ opacity: 0, y: 20 }}
@@ -194,7 +300,6 @@ const Index = () => {
         </a>
       </motion.div>
 
-      {/* Language indicator */}
       <motion.div
         className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass-effect rounded-full px-4 py-2 flex gap-2"
         initial={{ y: 20, opacity: 0 }}
