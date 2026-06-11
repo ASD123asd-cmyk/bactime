@@ -153,8 +153,8 @@ const Index = () => {
         <ProgressBar
           label={t("progressLabel")}
           percentage={(() => {
-            const start = new Date("2025-06-04T00:00:00+01:00").getTime();
-            const end = new Date("2026-06-04T08:00:00+01:00").getTime();
+            const start = new Date("2026-06-08T00:00:00+01:00").getTime();
+            const end = new Date("2027-06-08T08:00:00+01:00").getTime();
             const now = Date.now();
             return Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
           })()}
