@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 interface TimeLeft {
   days: number;
@@ -8,9 +8,17 @@ interface TimeLeft {
   totalMs: number;
 }
 
-export const useCountdown = (targetDate: Date, onTick?: (msLeft: number) => void): TimeLeft => {
+export const useCountdown = (
+  target: Date | string | number,
+  onTick?: (msLeft: number) => void
+): TimeLeft => {
+  const targetMs = useMemo(() => {
+    const d = target instanceof Date ? target : new Date(target);
+    return isNaN(d.getTime()) ? Date.now() : d.getTime();
+  }, [target]);
+
   const calculate = (): TimeLeft => {
-    const diff = targetDate.getTime() - Date.now();
+    const diff = targetMs - Date.now();
     if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 };
     return {
       days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -34,7 +42,7 @@ export const useCountdown = (targetDate: Date, onTick?: (msLeft: number) => void
     }, 1000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetDate.getTime()]);
+  }, [targetMs]);
 
   return timeLeft;
 };
