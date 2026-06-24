@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Volume2, VolumeX } from "lucide-react";
+import { Globe, Volume2, VolumeX, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
 import ShareButtons from "@/components/ShareButtons";
@@ -182,6 +183,13 @@ const Index = () => {
         >
           {tickSound ? <Volume2 className="w-5 h-5 text-foreground" /> : <VolumeX className="w-5 h-5 text-foreground" />}
         </button>
+        <Link
+          to="/study-tracker"
+          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
+          title={t("st_open")}
+        >
+          <BookOpen className="w-5 h-5 text-foreground" />
+        </Link>
       </motion.div>
 
       <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full mt-8">
