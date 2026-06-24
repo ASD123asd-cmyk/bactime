@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Volume2, VolumeX, BookOpen } from "lucide-react";
+import { Globe, Volume2, VolumeX, BookOpen, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
