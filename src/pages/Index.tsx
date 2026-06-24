@@ -190,6 +190,13 @@ const Index = () => {
         >
           <BookOpen className="w-5 h-5 text-foreground" />
         </Link>
+        <Link
+          to="/bac-calculator"
+          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
+          title={t("bc_open")}
+        >
+          <Calculator className="w-5 h-5 text-foreground" />
+        </Link>
       </motion.div>
 
       <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full mt-8">
