@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Volume2, VolumeX, BookOpen } from "lucide-react";
+import { Globe, Volume2, VolumeX, BookOpen, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import CountdownUnit from "@/components/CountdownUnit";
 import Particles from "@/components/Particles";
@@ -189,6 +189,13 @@ const Index = () => {
           title={t("st_open")}
         >
           <BookOpen className="w-5 h-5 text-foreground" />
+        </Link>
+        <Link
+          to="/bac-calculator"
+          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
+          title={t("bc_open")}
+        >
+          <Calculator className="w-5 h-5 text-foreground" />
         </Link>
       </motion.div>
 
