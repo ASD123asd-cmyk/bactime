@@ -108,7 +108,7 @@ const Pomodoro = ({ isRtl, t }: Props) => {
   const phaseLabel =
     phase === "work" ? t("workPhase") : phase === "short" ? t("shortBreakPhase") : t("longBreakPhase");
   const phaseColor =
-    phase === "work" ? "hsl(var(--primary))" : phase === "short" ? "hsl(var(--accent))" : "hsl(170 70% 45%)";
+    phase === "work" ? "hsl(var(--primary))" : phase === "short" ? "hsl(var(--accent))" : "hsl(var(--success))";
 
   const radius = 110;
   const circumference = 2 * Math.PI * radius;

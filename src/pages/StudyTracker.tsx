@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, Clock, Calendar, Target, Trash2, Plus } from "lucide-react";
+import { BookOpen, Clock, Calendar, Target, Trash2, Plus } from "lucide-react";
 import Particles from "@/components/Particles";
 import ProgressBar from "@/components/ProgressBar";
-import { translations, type Language } from "@/lib/translations";
+import { translations } from "@/lib/translations";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
 interface StudySession {
@@ -51,7 +51,7 @@ const startOfMonth = (d = new Date()) => {
 };
 
 const StudyTracker = () => {
-  const [lang, setLang] = useState<Language>("ar");
+  const { lang, isRtl } = useLanguage();
   const [sessions, setSessions] = useState<StudySession[]>(loadSessions);
   const [goal, setGoal] = useState<number>(loadGoal);
   const [subject, setSubject] = useState("");
@@ -62,14 +62,6 @@ const StudyTracker = () => {
     const v = tr[key];
     return typeof v === "string" ? v : "";
   };
-  const isRtl = lang === "ar";
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove("theme-sunset", "theme-forest");
-    root.classList.add("dark");
-    root.setAttribute("dir", isRtl ? "rtl" : "ltr");
-  }, [isRtl]);
 
   useEffect(() => {
     try {
@@ -128,12 +120,6 @@ const StudyTracker = () => {
     setSessions((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const languages: { code: Language; label: string }[] = [
-    { code: "ar", label: "العربية" },
-    { code: "fr", label: "Français" },
-    { code: "en", label: "English" },
-  ];
-
   const stats = [
     { icon: Clock, label: t("st_today"), value: fmt(todayMin), color: "from-primary to-accent" },
     { icon: Calendar, label: t("st_week"), value: fmt(weekMin), color: "from-accent to-primary" },
@@ -141,22 +127,9 @@ const StudyTracker = () => {
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center overflow-hidden pb-24 pt-20">
+    <div className="relative min-h-screen flex flex-col items-center overflow-hidden pb-12 pt-10">
       <Particles />
       <div className="glow-effect fixed inset-0 pointer-events-none z-0" />
-
-      <motion.div
-        className="fixed top-4 right-4 z-50"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
-        <Link
-          to="/"
-          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform inline-flex items-center gap-2"
-        >
-          <ArrowLeft className={`w-5 h-5 text-foreground ${isRtl ? "rotate-180" : ""}`} />
-        </Link>
-      </motion.div>
 
       <div className="relative z-10 w-full max-w-4xl px-4">
         <motion.div
@@ -325,26 +298,6 @@ const StudyTracker = () => {
         </motion.div>
       </div>
 
-      <motion.div
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass-effect rounded-full px-4 py-2 flex gap-2"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.6 }}
-      >
-        {languages.map((l) => (
-          <button
-            key={l.code}
-            onClick={() => setLang(l.code)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-              lang === l.code
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {l.label}
-          </button>
-        ))}
-      </motion.div>
     </div>
   );
 };
