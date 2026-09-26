@@ -7,24 +7,30 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import StudyTracker from "./pages/StudyTracker";
 import BacCalculator from "./pages/BacCalculator";
+import AppShell from "./components/AppShell";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/study-tracker" element={<StudyTracker />} />
-        <Route path="/bac-calculator" element={<BacCalculator />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppShell>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/study-tracker" element={<StudyTracker />} />
+              <Route path="/bac-calculator" element={<BacCalculator />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppShell>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 

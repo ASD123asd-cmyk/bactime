@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Volume2, VolumeX, BookOpen, Calculator } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Calculator, Timer, Volume2, VolumeX, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
-import CountdownUnit from "@/components/CountdownUnit";
-import Particles from "@/components/Particles";
 import ShareButtons from "@/components/ShareButtons";
 import ProgressBar from "@/components/ProgressBar";
 import Pomodoro from "@/components/Pomodoro";
 import ExamSettings from "@/components/ExamSettings";
+import { Button } from "@/components/ui/button";
 import { useCountdown } from "@/hooks/useCountdown";
-import { translations, type Language } from "@/lib/translations";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { playTick, playBell } from "@/lib/sounds";
 import { toast } from "sonner";
+import heroImage from "@/assets/hero-marrakech.jpg";
+import studentImage from "@/assets/student-desk.jpg";
 
 const DEFAULT_TARGET = "2027-06-08T08:00:00+01:00";
 const DEFAULT_REMINDERS = [60, 10];
@@ -36,7 +37,7 @@ const loadReminders = (): number[] => {
 };
 
 const Index = () => {
-  const [lang, setLang] = useState<Language>("ar");
+  const { lang, isRtl, t, arr } = useLanguage();
   const [tickSound, setTickSound] = useState(false);
   const [motIdx, setMotIdx] = useState(0);
   const [targetDate, setTargetDate] = useState<Date>(loadTarget);
@@ -45,20 +46,9 @@ const Index = () => {
     typeof Notification !== "undefined" && Notification.permission === "granted"
   );
   const firedRef = useRef<Set<string>>(new Set());
-
-  const tr = translations[lang];
-  const t = (key: string) => {
-    const val = tr[key];
-    return typeof val === "string" ? val : "";
-  };
-  const arr = (key: string) => {
-    const val = tr[key];
-    return Array.isArray(val) ? val : [];
-  };
   const motivations = arr("motivations");
-  const isRtl = lang === "ar";
+  const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
-  // Reset fired reminders when target changes
   useEffect(() => {
     firedRef.current = new Set();
   }, [targetDate]);
@@ -68,20 +58,14 @@ const Index = () => {
       const key = `${targetDate.getTime()}-${m}`;
       if (firedRef.current.has(key)) return;
       firedRef.current.add(key);
-
       const msg =
         m >= 60 && m % 60 === 0
           ? `${m / 60} ${t("hoursShort")} ${t("reminderSuffix")}`
           : `${m} ${t("minutesShort")} ${t("reminderSuffix")}`;
-
-      try {
-        playBell(true);
-      } catch {}
+      try { playBell(true); } catch {}
       toast(t("reminderTitle"), { description: msg });
       if (notifEnabled && "Notification" in window && Notification.permission === "granted") {
-        try {
-          new Notification(t("reminderTitle"), { body: msg });
-        } catch {}
+        try { new Notification(t("reminderTitle"), { body: msg }); } catch {}
       }
     },
     [targetDate, notifEnabled, t]
@@ -93,10 +77,7 @@ const Index = () => {
       if (msLeft <= 0) return;
       reminders.forEach((m) => {
         const offsetMs = m * 60 * 1000;
-        // Fire when remaining drops at/below the offset, but still positive
-        if (msLeft <= offsetMs && msLeft > offsetMs - 2000) {
-          fireReminder(m);
-        }
+        if (msLeft <= offsetMs && msLeft > offsetMs - 2000) fireReminder(m);
       });
     },
     [tickSound, reminders, fireReminder]
@@ -105,236 +86,131 @@ const Index = () => {
   const timeLeft = useCountdown(targetDate, handleTick);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMotIdx((prev) => (prev + 1) % motivations.length);
-    }, 10000);
+    const interval = setInterval(() => setMotIdx((p) => (p + 1) % Math.max(1, motivations.length)), 10000);
     return () => clearInterval(interval);
   }, [motivations.length]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove("theme-sunset", "theme-forest");
-    root.classList.add("dark");
-    root.setAttribute("dir", isRtl ? "rtl" : "ltr");
-  }, [isRtl]);
-
   const saveTarget = (d: Date) => {
     setTargetDate(d);
-    try {
-      localStorage.setItem("examTarget", d.toISOString());
-    } catch {}
+    try { localStorage.setItem("examTarget", d.toISOString()); } catch {}
     toast(t("examDateUpdated"));
   };
 
   const saveReminders = (r: number[]) => {
     setReminders(r);
-    try {
-      localStorage.setItem("examReminders", JSON.stringify(r));
-    } catch {}
+    try { localStorage.setItem("examReminders", JSON.stringify(r)); } catch {}
   };
 
-  const languages: { code: Language; label: string }[] = [
-    { code: "ar", label: "العربية" },
-    { code: "fr", label: "Français" },
-    { code: "en", label: "English" },
+  const locale = isRtl ? "ar-MA" : lang === "fr" ? "fr-FR" : "en-GB";
+  const examDateLabel = useMemo(
+    () => targetDate.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" }),
+    [targetDate, locale]
+  );
+  const progressStart = targetDate.getTime() - 365 * 24 * 60 * 60 * 1000;
+  const progress = Math.min(100, Math.max(0, ((Date.now() - progressStart) / (targetDate.getTime() - progressStart)) * 100));
+
+  const units = [
+    { v: timeLeft.days, l: t("days") },
+    { v: timeLeft.hours, l: t("hours") },
+    { v: timeLeft.minutes, l: t("minutes") },
+    { v: timeLeft.seconds, l: t("seconds") },
   ];
 
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
-
-  const examDateLabel = useMemo(
-    () =>
-      targetDate.toLocaleDateString(isRtl ? "ar-MA" : lang === "fr" ? "fr-FR" : "en-GB", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    [targetDate, lang, isRtl]
-  );
-
-  const progressStart = useMemo(() => {
-    const oneYear = 365 * 24 * 60 * 60 * 1000;
-    return targetDate.getTime() - oneYear;
-  }, [targetDate]);
+  const tools = [
+    { to: "/#pomodoro", icon: Timer, title: t("pomodoroTitle"), desc: t("pomodoroDesc"), tone: "bg-primary/15 text-primary" },
+    { to: "/study-tracker", icon: BookOpen, title: t("st_title"), desc: t("st_subtitle"), tone: "bg-accent/15 text-accent" },
+    { to: "/bac-calculator", icon: Calculator, title: t("bc_title"), desc: t("bc_subtitle"), tone: "bg-warning/15 text-warning" },
+  ];
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center overflow-hidden pb-24 pt-20">
-      <Particles />
-      <div className="glow-effect fixed inset-0 pointer-events-none z-0" />
+    <div className="pb-12">
+      {/* Hero */}
+      <section className="relative isolate overflow-hidden">
+        <img src={heroImage} alt="" width={1920} height={1088} className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <div className={`absolute inset-0 -z-10 from-background via-background/85 to-background/20 ${isRtl ? "bg-gradient-to-l" : "bg-gradient-to-r"}`} />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-background to-transparent" />
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-14 pt-20 md:px-8 lg:min-h-[640px] lg:grid-cols-[1.05fr_.95fr] lg:py-20">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <div className="mb-5 flex items-center justify-between lg:hidden">
+              <span className="text-lg font-extrabold">Bac<span className="text-primary">Time</span></span>
+              <Button variant="outline" size="icon" onClick={() => setTickSound(!tickSound)} aria-label={t("sound")} className="bg-background/60">
+                {tickSound ? <Volume2 /> : <VolumeX />}
+              </Button>
+            </div>
+            <p className="mb-4 inline-flex rounded-md border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">{t("subtitle")}</p>
+            <h1 className="max-w-2xl text-4xl font-extrabold leading-[1.2] sm:text-5xl lg:text-6xl">{t("heroTitle")}</h1>
+            <p className="mt-5 max-w-xl text-base leading-8 text-secondary-foreground sm:text-lg">{t("heroSubtitle")}</p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="bg-gradient-brand hover:opacity-90"><a href="#pomodoro">{t("start")} <Arrow /></a></Button>
+              <Button asChild size="lg" variant="outline" className="bg-background/50"><a href="#tools">{t("navTools")}</a></Button>
+            </div>
+          </motion.div>
 
-      <motion.div
-        className="fixed top-4 right-4 z-50 flex gap-2"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        <button
-          onClick={() => {
-            const idx = languages.findIndex((l) => l.code === lang);
-            setLang(languages[(idx + 1) % languages.length].code);
-          }}
-          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
-        >
-          <Globe className="w-5 h-5 text-foreground" />
-        </button>
-        <button
-          onClick={() => setTickSound(!tickSound)}
-          className={`glass-effect rounded-xl p-3 hover:scale-105 transition-transform ${tickSound ? "ring-2 ring-primary" : ""}`}
-          title={t("sound")}
-        >
-          {tickSound ? <Volume2 className="w-5 h-5 text-foreground" /> : <VolumeX className="w-5 h-5 text-foreground" />}
-        </button>
-        <Link
-          to="/study-tracker"
-          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
-          title={t("st_open")}
-        >
-          <BookOpen className="w-5 h-5 text-foreground" />
-        </Link>
-        <Link
-          to="/bac-calculator"
-          className="glass-effect rounded-xl p-3 hover:scale-105 transition-transform"
-          title={t("bc_open")}
-        >
-          <Calculator className="w-5 h-5 text-foreground" />
-        </Link>
-      </motion.div>
+          <motion.div id="countdown" className="scroll-mt-24 rounded-xl border border-border bg-card/90 p-5 shadow-2xl backdrop-blur-md sm:p-7" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.6 }}>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-extrabold sm:text-xl">{t("nationalExam")}</h2>
+              <Button variant="ghost" size="icon" className="hidden lg:inline-flex" onClick={() => setTickSound(!tickSound)} aria-label={t("sound")}>
+                {tickSound ? <Volume2 /> : <VolumeX />}
+              </Button>
+            </div>
+            <div className="grid grid-cols-4 gap-2 sm:gap-3" dir="ltr">
+              {(isRtl ? units : units).map((u) => (
+                <div key={u.l} className="rounded-lg border border-border bg-secondary/80 px-1 py-4 text-center">
+                  <AnimatePresence mode="popLayout">
+                    <motion.p key={u.v} initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 8, opacity: 0 }} className="font-display text-3xl font-extrabold tabular-nums sm:text-5xl">
+                      {String(u.v).padStart(2, "0")}
+                    </motion.p>
+                  </AnimatePresence>
+                  <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground sm:text-sm">{u.l}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4 text-accent" />{t("examDateLabel")}: {examDateLabel}</p>
+            <div className="mt-3 flex min-h-8 items-center">
+              <AnimatePresence mode="wait">
+                <motion.p key={motIdx} className="font-semibold" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+                  {motivations[motIdx]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-      <div className="relative z-10 flex flex-col items-center px-4 max-w-4xl w-full mt-8">
-        <motion.div
-          className="text-center mb-10"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gradient leading-tight mb-3"
-            style={{ fontFamily: isRtl ? "var(--font-arabic)" : "var(--font-display)" }}
-          >
-            {t("title")}
-          </h1>
-          <motion.p
-            className="text-lg sm:text-xl text-muted-foreground font-medium"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            {t("subtitle")}
-          </motion.p>
-        </motion.div>
+      {/* Tools */}
+      <section id="tools" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-10 md:px-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-extrabold sm:text-3xl">{t("toolsTitle")}</h2>
+          <p className="mt-1 text-muted-foreground">{t("toolsDesc")}</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {tools.map((tool) => (
+            <Link key={tool.to} to={tool.to} className="countdown-card group flex gap-4 p-5 transition-transform hover:-translate-y-1">
+              <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${tool.tone}`}><tool.icon className="h-6 w-6" /></span>
+              <span className="min-w-0">
+                <span className="block font-bold">{tool.title}</span>
+                <span className="mt-1 block text-sm leading-6 text-muted-foreground">{tool.desc}</span>
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-primary">{t("openTool")} <Arrow className="h-4 w-4" /></span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        <motion.div
-          className={`flex gap-3 sm:gap-4 md:gap-6 mb-10 ${isRtl ? "flex-row-reverse" : ""}`}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <CountdownUnit value={timeLeft.days} label={t("days")} />
-          <CountdownUnit value={timeLeft.hours} label={t("hours")} />
-          <CountdownUnit value={timeLeft.minutes} label={t("minutes")} />
-          <CountdownUnit value={timeLeft.seconds} label={t("seconds")} />
-        </motion.div>
+      <ExamSettings targetDate={targetDate} onSave={saveTarget} reminders={reminders} onRemindersChange={saveReminders} notifEnabled={notifEnabled} onToggleNotif={setNotifEnabled} isRtl={isRtl} t={t} />
+      <ProgressBar label={t("progressLabel")} percentage={progress} isRtl={isRtl} />
 
-        <motion.div
-          className="text-center space-y-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <p className="text-sm sm:text-base text-muted-foreground font-medium">
-            📅 {t("examDateLabel")}: {examDateLabel}
-          </p>
-          <div className="h-8 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={motIdx}
-                className="text-base sm:text-lg font-semibold text-foreground"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.5 }}
-              >
-                {motivations[motIdx]}
-              </motion.p>
-            </AnimatePresence>
-          </div>
-          <p className="text-sm text-muted-foreground">{t("goodLuck")}</p>
-        </motion.div>
-      </div>
+      <div id="pomodoro" className="scroll-mt-20"><Pomodoro isRtl={isRtl} t={t} /></div>
 
-      <div className="relative z-10 w-full">
-        <ExamSettings
-          targetDate={targetDate}
-          onSave={saveTarget}
-          reminders={reminders}
-          onRemindersChange={saveReminders}
-          notifEnabled={notifEnabled}
-          onToggleNotif={setNotifEnabled}
-          isRtl={isRtl}
-          t={t}
-        />
+      <section className="mx-auto mt-12 grid max-w-4xl items-center gap-6 px-4 md:grid-cols-2">
+        <img src={studentImage} alt={t("heroSubtitle")} loading="lazy" width={1600} height={1200} className="aspect-[4/3] w-full rounded-xl border border-border object-cover" />
+        <div>
+          <p className="text-2xl font-extrabold leading-snug">{t("goodLuck")}</p>
+          <p className="mt-3 text-muted-foreground">{t("heroSubtitle")}</p>
+        </div>
+      </section>
 
-        <ProgressBar
-          label={t("progressLabel")}
-          percentage={(() => {
-            const end = targetDate.getTime();
-            const now = Date.now();
-            return Math.min(100, Math.max(0, ((now - progressStart) / (end - progressStart)) * 100));
-          })()}
-          isRtl={isRtl}
-        />
-
-        <Pomodoro isRtl={isRtl} t={t} />
-
-        <ShareButtons
-          title={t("shareTitle")}
-          shareText={t("shareText")}
-          url={siteUrl}
-          isRtl={isRtl}
-        />
-      </div>
-
-      <motion.div
-        className="w-full max-w-4xl mx-auto mt-8 px-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.4 }}
-      >
-        <a
-          href="https://www.instagram.com/_hamza__ai/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="countdown-card p-4 flex items-center justify-center gap-3 group cursor-pointer hover:scale-[1.02] transition-transform"
-        >
-          <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-          </svg>
-          <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-            {t("developerCredit")}
-          </span>
-          <span className="text-xs text-muted-foreground">@_hamza__ai</span>
-        </a>
-      </motion.div>
-
-      <motion.div
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass-effect rounded-full px-4 py-2 flex gap-2"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8 }}
-      >
-        {languages.map((l) => (
-          <button
-            key={l.code}
-            onClick={() => setLang(l.code)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-              lang === l.code
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {l.label}
-          </button>
-        ))}
-      </motion.div>
+      <ShareButtons title={t("shareTitle")} shareText={t("shareText")} url={typeof window !== "undefined" ? window.location.origin : ""} isRtl={isRtl} />
     </div>
   );
 };
