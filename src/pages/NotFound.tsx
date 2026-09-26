@@ -1,62 +1,31 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import Particles from "@/components/Particles";
+import { Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BrandIcon } from "@/components/BrandLogo";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden transition-colors duration-500 px-4">
-      <Particles />
-      <div className="glow-effect fixed inset-0 pointer-events-none z-0" />
-
-      <motion.div
-        className="relative z-10 text-center max-w-lg"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <motion.h1
-          className="text-8xl sm:text-9xl font-black text-gradient mb-4"
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
-        >
-          404
-        </motion.h1>
-
-        <motion.div
-          className="countdown-card p-8 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <p className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-            الصفحة غير موجودة
-          </p>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            يبدو أنك ضللت الطريق... لكن لا تقلق، امتحان البكالوريا لا يزال في انتظارك! 📚
-          </p>
-        </motion.div>
-
-        <motion.a
-          href="/"
-          className="inline-flex items-center gap-2 glass-effect rounded-xl px-6 py-3 font-semibold text-foreground hover:scale-105 transition-transform"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          🏠 العودة إلى العد التنازلي
-        </motion.a>
+    <section className="flex min-h-[80vh] items-center justify-center px-4 py-16">
+      <motion.div className="max-w-lg text-center" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}>
+        <BrandIcon className="mx-auto mb-6 h-20 w-20" />
+        <h1 className="mb-4 font-display text-8xl font-extrabold text-gradient">404</h1>
+        <div className="countdown-card mb-8 p-8">
+          <p className="mb-3 text-2xl font-bold">{t("nf_title")}</p>
+          <p className="text-muted-foreground">{t("nf_desc")}</p>
+        </div>
+        <Button asChild size="lg" className="bg-gradient-brand"><Link to="/"><Home />{t("nf_back")}</Link></Button>
       </motion.div>
-    </div>
+    </section>
   );
 };
 

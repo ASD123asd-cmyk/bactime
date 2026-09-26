@@ -14,10 +14,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Outfit", "sans-serif"],
-        arabic: ["Cairo", "sans-serif"],
+        display: ["Inter", "sans-serif"],
+        arabic: ["Tajawal", "sans-serif"],
       },
       colors: {
+        warning: "hsl(var(--warning))",
+        success: "hsl(var(--success))",
+        info: "hsl(var(--info))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
