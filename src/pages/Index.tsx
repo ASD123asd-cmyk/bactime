@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, BookOpen, Calculator, Timer, Volume2, VolumeX, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 import ShareButtons from "@/components/ShareButtons";
+import BrandLogo from "@/components/BrandLogo";
 import ProgressBar from "@/components/ProgressBar";
 import Pomodoro from "@/components/Pomodoro";
 import ExamSettings from "@/components/ExamSettings";
@@ -132,7 +133,7 @@ const Index = () => {
         <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-14 pt-20 md:px-8 lg:min-h-[640px] lg:grid-cols-[1.05fr_.95fr] lg:py-20">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="mb-5 flex items-center justify-between lg:hidden">
-              <span className="text-lg font-extrabold">Bac<span className="text-primary">Time</span></span>
+              <BrandLogo className="h-10" />
               <Button variant="outline" size="icon" onClick={() => setTickSound(!tickSound)} aria-label={t("sound")} className="bg-background/60">
                 {tickSound ? <Volume2 /> : <VolumeX />}
               </Button>
