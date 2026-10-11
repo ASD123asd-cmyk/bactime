@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import StudyTracker from "./pages/StudyTracker";
 import BacCalculator from "./pages/BacCalculator";
+import Focus from "./pages/Focus";
 import AppShell from "./components/AppShell";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
@@ -24,6 +25,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/study-tracker" element={<StudyTracker />} />
               <Route path="/bac-calculator" element={<BacCalculator />} />
+              <Route path="/focus" element={<Focus />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

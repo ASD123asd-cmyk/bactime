@@ -21,7 +21,7 @@ const languages: { code: Language; label: string }[] = [
 
 const navItems = [
   { to: "/", key: "navHome", icon: Home },
-  { to: "/#tools", key: "navTools", icon: TimerReset },
+  { to: "/focus", key: "pomodoroTitle", icon: TimerReset },
   { to: "/study-tracker", key: "st_open", icon: BookOpen },
   { to: "/bac-calculator", key: "bc_open", icon: Calculator },
 ];
@@ -95,7 +95,7 @@ const AppShell = ({ children, soundOn, onSoundToggle }: AppShellProps) => {
             <div className="flex flex-col items-start gap-2 text-sm text-muted-foreground">
               <Link to="/study-tracker" className="hover:text-primary">{t("st_open")}</Link>
               <Link to="/bac-calculator" className="hover:text-primary">{t("bc_open")}</Link>
-              <Link to="/#pomodoro" className="hover:text-primary">{t("pomodoroTitle")}</Link>
+              <Link to="/focus" className="hover:text-primary">{t("pomodoroTitle")}</Link>
             </div>
           </div>
           <div>
@@ -118,7 +118,7 @@ const AppShell = ({ children, soundOn, onSoundToggle }: AppShellProps) => {
               {[
                 { to: "/", label: t("navHome") },
                 { to: "/#tools", label: t("navTools") },
-                { to: "/#pomodoro", label: t("pomodoroTitle") },
+                { to: "/focus", label: t("pomodoroTitle") },
                 { to: "/study-tracker", label: t("st_open") },
                 { to: "/bac-calculator", label: t("bc_open") },
               ].map((l) => (
