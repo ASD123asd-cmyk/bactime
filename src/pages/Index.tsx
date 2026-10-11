@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import ShareButtons from "@/components/ShareButtons";
 import BrandLogo from "@/components/BrandLogo";
 import ProgressBar from "@/components/ProgressBar";
-import Pomodoro from "@/components/Pomodoro";
 import ExamSettings from "@/components/ExamSettings";
 import { Button } from "@/components/ui/button";
 import { useCountdown } from "@/hooks/useCountdown";
@@ -13,7 +12,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { playTick, playBell } from "@/lib/sounds";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-marrakech.jpg";
-import studentImage from "@/assets/student-desk.jpg";
 
 const DEFAULT_TARGET = "2027-06-08T08:00:00+01:00";
 const DEFAULT_REMINDERS = [60, 10];
@@ -118,7 +116,7 @@ const Index = () => {
   ];
 
   const tools = [
-    { to: "/#pomodoro", icon: Timer, title: t("pomodoroTitle"), desc: t("pomodoroDesc"), tone: "bg-primary/15 text-primary" },
+    { to: "/focus", icon: Timer, title: t("pomodoroTitle"), desc: t("pomodoroDesc"), tone: "bg-primary/15 text-primary" },
     { to: "/study-tracker", icon: BookOpen, title: t("st_title"), desc: t("st_subtitle"), tone: "bg-accent/15 text-accent" },
     { to: "/bac-calculator", icon: Calculator, title: t("bc_title"), desc: t("bc_subtitle"), tone: "bg-warning/15 text-warning" },
   ];
@@ -130,7 +128,7 @@ const Index = () => {
         <img src={heroImage} alt="" width={1920} height={1088} className="absolute inset-0 -z-20 h-full w-full object-cover" />
         <div className={`absolute inset-0 -z-10 from-background via-background/85 to-background/20 ${isRtl ? "bg-gradient-to-l" : "bg-gradient-to-r"}`} />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-32 bg-gradient-to-t from-background to-transparent" />
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-14 pt-20 md:px-8 lg:min-h-[640px] lg:grid-cols-[1.05fr_.95fr] lg:py-20">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 pb-14 pt-20 md:px-8 lg:grid-cols-[1.05fr_.95fr] lg:py-14">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="mb-5 flex items-center justify-between lg:hidden">
               <BrandLogo className="h-10" />
@@ -142,7 +140,7 @@ const Index = () => {
             <h1 className="max-w-2xl text-4xl font-extrabold leading-[1.2] sm:text-5xl lg:text-6xl">{t("heroTitle")}</h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-secondary-foreground sm:text-lg">{t("heroSubtitle")}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-gradient-brand hover:opacity-90"><a href="#pomodoro">{t("start")} <Arrow /></a></Button>
+              <Button asChild size="lg" className="bg-gradient-brand hover:opacity-90"><Link to="/focus">{t("start")} <Arrow /></Link></Button>
               <Button asChild size="lg" variant="outline" className="bg-background/50"><a href="#tools">{t("navTools")}</a></Button>
             </div>
           </motion.div>
@@ -186,12 +184,12 @@ const Index = () => {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {tools.map((tool) => (
-            <Link key={tool.to} to={tool.to} className="countdown-card group flex gap-4 p-5 transition-transform hover:-translate-y-1">
+            <Link key={tool.to} to={tool.to} className="countdown-card group flex h-full gap-4 p-5 transition-transform hover:-translate-y-1">
               <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${tool.tone}`}><tool.icon className="h-6 w-6" /></span>
-              <span className="min-w-0">
+              <span className="flex min-w-0 flex-1 flex-col">
                 <span className="block font-bold">{tool.title}</span>
                 <span className="mt-1 block text-sm leading-6 text-muted-foreground">{tool.desc}</span>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-primary">{t("openTool")} <Arrow className="h-4 w-4" /></span>
+                <span className="mt-auto pt-3 inline-flex items-center gap-1 text-sm font-bold text-primary">{t("openTool")} <Arrow className="h-4 w-4" /></span>
               </span>
             </Link>
           ))}
@@ -200,16 +198,6 @@ const Index = () => {
 
       <ExamSettings targetDate={targetDate} onSave={saveTarget} reminders={reminders} onRemindersChange={saveReminders} notifEnabled={notifEnabled} onToggleNotif={setNotifEnabled} isRtl={isRtl} t={t} />
       <ProgressBar label={t("progressLabel")} percentage={progress} isRtl={isRtl} />
-
-      <div id="pomodoro" className="scroll-mt-20"><Pomodoro isRtl={isRtl} t={t} /></div>
-
-      <section className="mx-auto mt-12 grid max-w-4xl items-center gap-6 px-4 md:grid-cols-2">
-        <img src={studentImage} alt={t("heroSubtitle")} loading="lazy" width={1600} height={1200} className="aspect-[4/3] w-full rounded-xl border border-border object-cover" />
-        <div>
-          <p className="text-2xl font-extrabold leading-snug">{t("goodLuck")}</p>
-          <p className="mt-3 text-muted-foreground">{t("heroSubtitle")}</p>
-        </div>
-      </section>
 
       <ShareButtons title={t("shareTitle")} shareText={t("shareText")} url={typeof window !== "undefined" ? window.location.origin : ""} isRtl={isRtl} />
     </div>
