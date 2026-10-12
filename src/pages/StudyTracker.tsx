@@ -6,6 +6,7 @@ import ProgressBar from "@/components/ProgressBar";
 import { translations } from "@/lib/translations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 interface StudySession {
   id: string;
@@ -52,6 +53,11 @@ const startOfMonth = (d = new Date()) => {
 
 const StudyTracker = () => {
   const { lang, isRtl } = useLanguage();
+  usePageMeta(
+    { ar: "متعقب الدراسة | BacTime", fr: "Suivi des révisions | BacTime", en: "Study Tracker | BacTime" }[lang],
+    { ar: "سجّل جلسات مراجعتك للبكالوريا وتابع ساعات الدراسة اليومية والأسبوعية والشهرية مع هدف يومي.", fr: "Enregistrez vos sessions de révision du bac et suivez vos heures par jour, semaine et mois avec un objectif quotidien.", en: "Log your Bac study sessions and track daily, weekly and monthly hours against a daily goal." }[lang],
+    "/study-tracker"
+  );
   const [sessions, setSessions] = useState<StudySession[]>(loadSessions);
   const [goal, setGoal] = useState<number>(loadGoal);
   const [subject, setSubject] = useState("");
@@ -182,7 +188,7 @@ const StudyTracker = () => {
           <div className={`flex items-center justify-between mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
             <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
               <Target className="w-5 h-5 text-primary" />
-              <span className="font-bold text-foreground">{t("st_dailyGoal")}</span>
+              <h2 className="font-bold text-foreground">{t("st_dailyGoal")}</h2>
             </div>
             <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : ""}`}>
               <input
@@ -220,7 +226,7 @@ const StudyTracker = () => {
         >
           <div className={`flex items-center gap-2 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
             <Plus className="w-5 h-5 text-primary" />
-            <span className="font-bold text-foreground">{t("st_logSession")}</span>
+            <h2 className="font-bold text-foreground">{t("st_logSession")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3">
             <input
@@ -256,7 +262,7 @@ const StudyTracker = () => {
         >
           <div className={`flex items-center gap-2 mb-4 ${isRtl ? "flex-row-reverse" : ""}`}>
             <BookOpen className="w-5 h-5 text-primary" />
-            <span className="font-bold text-foreground">{t("st_recent")}</span>
+            <h2 className="font-bold text-foreground">{t("st_recent")}</h2>
           </div>
           {sessions.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">{t("st_empty")}</p>
