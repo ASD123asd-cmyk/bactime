@@ -39,8 +39,8 @@ const loadReminders = (): number[] => {
 const Index = () => {
   const { lang, isRtl, t, arr } = useLanguage();
   usePageMeta(
-    "BacTime | العد التنازلي للبكالوريا 2027 وأدوات الاستعداد - المغرب",
-    "BacTime منصة مغربية للاستعداد للبكالوريا 2027: عد تنازلي للامتحان الوطني، مؤقت بومودورو، متعقب الدراسة وحاسبة المعدل.",
+    "العد التنازلي للباك 2027 في المغرب | BacTime",
+    "اكتشف الوقت المتبقي للباكالوريا في المغرب، وتابع مواعيد الامتحانات، ونظّم مراجعتك باستخدام مؤقت بومودورو وحاسبة معدل الباك.",
     "/"
   );
   const [tickSound, setTickSound] = useState(false);
@@ -158,7 +158,7 @@ const Index = () => {
                 {tickSound ? <Volume2 /> : <VolumeX />}
               </Button>
             </div>
-            <div className="grid grid-cols-4 gap-2 sm:gap-3" dir="ltr">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3" dir="ltr" data-nosnippet role="timer" aria-live="off">
               {(isRtl ? units : units).map((u) => (
                 <div key={u.l} className="rounded-lg border border-border bg-secondary/80 px-1 py-4 text-center">
                   <AnimatePresence mode="popLayout">
@@ -166,12 +166,12 @@ const Index = () => {
                       {String(u.v).padStart(2, "0")}
                     </motion.p>
                   </AnimatePresence>
-                  <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground sm:text-sm">{u.l}</p>
+                  <p dir="auto" className="mt-1 truncate text-[11px] font-semibold text-muted-foreground sm:text-sm">{u.l}</p>
                 </div>
               ))}
             </div>
             <p className="mt-5 flex items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4 text-accent" />{t("examDateLabel")}: {examDateLabel}</p>
-            <div className="mt-3 flex min-h-8 items-center">
+            <div className="mt-3 flex min-h-8 items-center" data-nosnippet>
               <AnimatePresence mode="wait">
                 <motion.p key={motIdx} className="font-semibold" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
                   {motivations[motIdx]}
