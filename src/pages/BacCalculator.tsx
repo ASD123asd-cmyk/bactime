@@ -337,6 +337,7 @@ const BacCalculator = () => {
                   max={20}
                   step={0.25}
                   inputMode="decimal"
+                  aria-label={t(`bc_sub_${sub.key}`)}
                   placeholder="/20"
                   value={grades[sub.key] ?? ""}
                   onChange={(e) =>
@@ -396,6 +397,7 @@ const BacCalculator = () => {
           <div className={`flex items-center gap-3 mb-3 ${isRtl ? "flex-row-reverse" : ""}`}>
             <input
               type="range"
+              aria-label={t("bc_targetAvg")}
               min={10}
               max={20}
               step={0.5}
@@ -492,6 +494,7 @@ const BacCalculator = () => {
                   </span>
                   <button
                     onClick={() => removeHistory(h.id)}
+                    aria-label={t("bc_deleteHistory") || "Delete"}
                     className="p-2 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
