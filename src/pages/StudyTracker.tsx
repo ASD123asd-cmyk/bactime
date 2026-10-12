@@ -53,6 +53,11 @@ const startOfMonth = (d = new Date()) => {
 
 const StudyTracker = () => {
   const { lang, isRtl } = useLanguage();
+  usePageMeta(
+    { ar: "متعقب الدراسة | BacTime", fr: "Suivi des révisions | BacTime", en: "Study Tracker | BacTime" }[lang],
+    { ar: "سجّل جلسات مراجعتك للبكالوريا وتابع ساعات الدراسة اليومية والأسبوعية والشهرية مع هدف يومي.", fr: "Enregistrez vos sessions de révision du bac et suivez vos heures par jour, semaine et mois avec un objectif quotidien.", en: "Log your Bac study sessions and track daily, weekly and monthly hours against a daily goal." }[lang],
+    "/study-tracker"
+  );
   const [sessions, setSessions] = useState<StudySession[]>(loadSessions);
   const [goal, setGoal] = useState<number>(loadGoal);
   const [subject, setSubject] = useState("");

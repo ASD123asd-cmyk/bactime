@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, BookOpen, Calculator, Timer, Volume2, VolumeX, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -37,6 +38,11 @@ const loadReminders = (): number[] => {
 
 const Index = () => {
   const { lang, isRtl, t, arr } = useLanguage();
+  usePageMeta(
+    "BacTime | العد التنازلي للبكالوريا 2027 وأدوات الاستعداد - المغرب",
+    "BacTime منصة مغربية للاستعداد للبكالوريا 2027: عد تنازلي للامتحان الوطني، مؤقت بومودورو، متعقب الدراسة وحاسبة المعدل.",
+    "/"
+  );
   const [tickSound, setTickSound] = useState(false);
   const [motIdx, setMotIdx] = useState(0);
   const [targetDate, setTargetDate] = useState<Date>(loadTarget);
