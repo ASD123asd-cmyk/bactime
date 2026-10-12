@@ -122,6 +122,7 @@ export const translations: Record<Language, Record<string, string | string[]>> =
     bc_allFilled: "تم تعبئة جميع المواد",
     bc_history: "آخر الحسابات",
     bc_noHistory: "لا توجد حسابات محفوظة بعد",
+    bc_deleteHistory: "حذف هذا الحساب",
     bc_tipsTitle: "نصائح تعليمية",
     bc_tips: [
       "ركز على المواد ذات المعامل المرتفع لرفع معدلك بسرعة 🎯",
@@ -294,6 +295,7 @@ export const translations: Record<Language, Record<string, string | string[]>> =
     bc_allFilled: "Toutes les matières sont remplies",
     bc_history: "Calculs récents",
     bc_noHistory: "Aucun calcul enregistré",
+    bc_deleteHistory: "Supprimer ce calcul",
     bc_tipsTitle: "Conseils",
     bc_tips: [
       "Concentrez-vous d'abord sur les matières à fort coefficient 🎯",
@@ -466,6 +468,7 @@ export const translations: Record<Language, Record<string, string | string[]>> =
     bc_allFilled: "All subjects are filled in",
     bc_history: "Recent calculations",
     bc_noHistory: "No saved calculations yet",
+    bc_deleteHistory: "Delete this calculation",
     bc_tipsTitle: "Study tips",
     bc_tips: [
       "Focus first on subjects with the highest coefficients 🎯",

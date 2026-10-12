@@ -209,6 +209,7 @@ const Pomodoro = ({ isRtl, t }: Props) => {
             </label>
             <input
               type="range"
+              aria-label={t("workDuration")}
               min={5}
               max={60}
               step={5}
@@ -224,6 +225,7 @@ const Pomodoro = ({ isRtl, t }: Props) => {
             </label>
             <input
               type="range"
+              aria-label={t("sessions")}
               min={1}
               max={10}
               step={1}
