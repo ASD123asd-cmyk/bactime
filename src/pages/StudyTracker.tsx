@@ -195,6 +195,7 @@ const StudyTracker = () => {
                 type="number"
                 min={1}
                 max={24}
+                aria-label={t("st_dailyGoal")}
                 value={goal}
                 onChange={(e) => setGoal(Math.max(1, Math.min(24, Number(e.target.value) || 1)))}
                 className="w-16 h-9 rounded-lg bg-secondary border border-border text-center text-foreground font-bold focus:outline-none focus:ring-2 focus:ring-primary"
@@ -231,6 +232,7 @@ const StudyTracker = () => {
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3">
             <input
               type="text"
+              aria-label={t("st_subjectPh")}
               placeholder={t("st_subjectPh")}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -239,6 +241,7 @@ const StudyTracker = () => {
             <input
               type="number"
               min={1}
+              aria-label={t("st_durationPh")}
               placeholder={t("st_durationPh")}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value) || 0)}
