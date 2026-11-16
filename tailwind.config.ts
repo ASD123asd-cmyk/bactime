@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Inter", "sans-serif"],
-        arabic: ["Tajawal", "sans-serif"],
+        display: ["IBM Plex Sans", "sans-serif"],
+        arabic: ["IBM Plex Sans Arabic", "sans-serif"],
       },
       colors: {
         warning: "hsl(var(--warning))",

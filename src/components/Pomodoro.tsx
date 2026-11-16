@@ -1,6 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Pause, RotateCcw, SkipForward, Timer } from "lucide-react";
+import { Pause, Play, RotateCcw, SkipForward, Timer } from "lucide-react";
+import { toast } from "sonner";
+import WheelPicker, { type WheelColumn } from "@/components/WheelPicker";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { playBell } from "@/lib/sounds";
 
 type Phase = "work" | "short" | "long";
@@ -10,251 +14,162 @@ interface Props {
   t: (key: string) => string;
 }
 
-const Pomodoro = ({ isRtl, t }: Props) => {
-  const [workMin, setWorkMin] = useState(25);
-  const [totalSessions, setTotalSessions] = useState(4);
-  const [shortBreakMin, setShortBreakMin] = useState(0); // auto
-  const [longBreakMin, setLongBreakMin] = useState(0); // auto
+const range = (start: number, end: number, step = 1) =>
+  Array.from({ length: Math.floor((end - start) / step) + 1 }, (_, index) => {
+    const value = start + index * step;
+    return { value: String(value), label: String(value).padStart(2, "0") };
+  });
 
+const Pomodoro = ({ isRtl, t }: Props) => {
+  const { lang } = useLanguage();
+  const [workMin, setWorkMin] = useState(25);
+  const [shortBreakMin, setShortBreakMin] = useState(5);
+  const [longBreakMin, setLongBreakMin] = useState(15);
+  const [totalSessions, setTotalSessions] = useState(4);
+  const [longEvery, setLongEvery] = useState(4);
+  const [autoBreaks, setAutoBreaks] = useState(true);
   const [phase, setPhase] = useState<Phase>("work");
   const [currentSession, setCurrentSession] = useState(1);
-  const [secondsLeft, setSecondsLeft] = useState(workMin * 60);
+  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
   const [running, setRunning] = useState(false);
-  const intervalRef = useRef<number | null>(null);
+  const [completedSessions, setCompletedSessions] = useState(0);
 
-  // Auto-suggested breaks based on work duration
-  const autoShort = Math.max(3, Math.round(workMin / 5));
-  const autoLong = Math.max(10, Math.round(workMin / 5) * 3);
-  const effectiveShort = shortBreakMin || autoShort;
-  const effectiveLong = longBreakMin || autoLong;
+  const effectiveShort = autoBreaks ? Math.max(3, Math.round(workMin / 5)) : shortBreakMin;
+  const effectiveLong = autoBreaks ? Math.max(10, Math.round(workMin / 5) * 3) : longBreakMin;
+  const durationFor = (nextPhase: Phase) =>
+    (nextPhase === "work" ? workMin : nextPhase === "short" ? effectiveShort : effectiveLong) * 60;
 
-  const phaseDuration = (p: Phase) => {
-    if (p === "work") return workMin * 60;
-    if (p === "short") return effectiveShort * 60;
-    return effectiveLong * 60;
-  };
-
-  // Reset timer when settings change and not running
   useEffect(() => {
-    if (!running) {
-      setSecondsLeft(phaseDuration(phase));
-    }
+    if (!running) setSecondsLeft(durationFor(phase));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workMin, shortBreakMin, longBreakMin, phase]);
+  }, [workMin, shortBreakMin, longBreakMin, autoBreaks, phase]);
 
+  const isCounting = running && secondsLeft > 0;
   useEffect(() => {
-    if (!running) return;
-    intervalRef.current = window.setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          handlePhaseEnd();
-          return 0;
-        }
-        return s - 1;
-      });
+    if (!isCounting) return;
+    const interval = window.setInterval(() => {
+      setSecondsLeft((remaining) => Math.max(0, remaining - 1));
     }, 1000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, phase, currentSession]);
+    return () => window.clearInterval(interval);
+  }, [isCounting]);
 
-  const handlePhaseEnd = () => {
+  useEffect(() => {
+    if (!running || secondsLeft !== 0) return;
     if (phase === "work") {
-      playBell(false); // break starts
-      if (currentSession >= totalSessions) {
-        // all done -> long break then stop
-        setPhase("long");
-        setSecondsLeft(effectiveLong * 60);
-      } else {
-        const isLong = currentSession % 4 === 0;
-        const next: Phase = isLong ? "long" : "short";
-        setPhase(next);
-        setSecondsLeft(phaseDuration(next));
-      }
-    } else {
-      playBell(true); // work starts
-      if (currentSession >= totalSessions) {
-        setRunning(false);
-        setPhase("work");
-        setCurrentSession(1);
-        setSecondsLeft(workMin * 60);
-        return;
-      }
-      setCurrentSession((c) => c + 1);
-      setPhase("work");
-      setSecondsLeft(workMin * 60);
+      setCompletedSessions((count) => count + 1);
+      const nextPhase: Phase = currentSession >= totalSessions || currentSession % longEvery === 0 ? "long" : "short";
+      playBell(false);
+      setPhase(nextPhase);
+      setSecondsLeft(durationFor(nextPhase));
+      return;
     }
-  };
 
-  const handleStart = () => setRunning(true);
-  const handlePause = () => setRunning(false);
-  const handleReset = () => {
+    if (currentSession >= totalSessions) {
+      playBell(true);
+      setRunning(false);
+      setPhase("work");
+      setCurrentSession(1);
+      setSecondsLeft(workMin * 60);
+      toast(t("finishedCycle"));
+      return;
+    }
+
+    playBell(true);
+    setCurrentSession((session) => session + 1);
+    setPhase("work");
+    setSecondsLeft(workMin * 60);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [running, secondsLeft, phase, currentSession, totalSessions, longEvery, effectiveLong, effectiveShort, workMin]);
+
+  const reset = () => {
     setRunning(false);
     setPhase("work");
     setCurrentSession(1);
     setSecondsLeft(workMin * 60);
   };
-  const handleSkip = () => {
-    setRunning(false);
-    handlePhaseEnd();
+  const skip = () => {
+    if (running) setSecondsLeft(0);
+    else {
+      setRunning(true);
+      setSecondsLeft(0);
+    }
   };
 
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
-  const total = phaseDuration(phase);
-  const progress = total > 0 ? ((total - secondsLeft) / total) * 100 : 0;
-
-  const phaseLabel =
-    phase === "work" ? t("workPhase") : phase === "short" ? t("shortBreakPhase") : t("longBreakPhase");
-  const phaseColor =
-    phase === "work" ? "hsl(var(--primary))" : phase === "short" ? "hsl(var(--accent))" : "hsl(var(--success))";
-
-  const radius = 110;
+  const total = durationFor(phase);
+  const progress = total > 0 ? Math.min(100, ((total - secondsLeft) / total) * 100) : 0;
+  const phaseLabel = phase === "work" ? t("focusPhase") : phase === "short" ? t("shortPhase") : t("longPhase");
+  const phaseColor = phase === "work" ? "hsl(var(--primary))" : phase === "short" ? "hsl(var(--accent))" : "hsl(var(--success))";
+  const radius = 106;
   const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference * (1 - progress / 100);
+  const columns: WheelColumn[] = useMemo(() => [
+    { id: "work", label: t("focusMinutes"), options: range(5, 60, 5), className: "w-12 sm:w-14" },
+    { id: "short", label: t("shortMinutes"), options: range(1, 20), className: "w-12 sm:w-14" },
+    { id: "long", label: t("longMinutes"), options: range(5, 45, 5), className: "w-12 sm:w-14" },
+    { id: "sessions", label: t("totalSessions"), options: range(1, 10), className: "w-12 sm:w-14" },
+  ], [t]);
+  const values = {
+    work: String(workMin),
+    short: String(shortBreakMin),
+    long: String(longBreakMin),
+    sessions: String(totalSessions),
+  };
+  const updateSettings = (next: Record<string, string>) => {
+    setWorkMin(Number(next.work));
+    setShortBreakMin(Number(next.short));
+    setLongBreakMin(Number(next.long));
+    setTotalSessions(Number(next.sessions));
+  };
 
   return (
-    <motion.section
-      className="w-full max-w-4xl mx-auto px-4 mt-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4 }}
-      dir={isRtl ? "rtl" : "ltr"}
-    >
-      <div className="countdown-card p-6 sm:p-8">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Timer className="w-6 h-6 text-primary" />
-          <h2 className="text-2xl sm:text-3xl font-bold text-gradient">{t("pomodoroTitle")}</h2>
-        </div>
-        <p className="text-center text-sm text-muted-foreground mb-6">{t("pomodoroDesc")}</p>
-
-        {/* Timer Circle */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative w-[260px] h-[260px]">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 240 240">
-              <circle
-                cx="120"
-                cy="120"
-                r={radius}
-                fill="none"
-                stroke="hsl(var(--muted))"
-                strokeWidth="10"
-              />
-              <motion.circle
-                cx="120"
-                cy="120"
-                r={radius}
-                fill="none"
-                stroke={phaseColor}
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                animate={{ strokeDashoffset: dashOffset }}
-                transition={{ duration: 0.5, ease: "linear" }}
-              />
+    <motion.section className="w-full max-w-4xl mx-auto px-4 mt-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} dir={isRtl ? "rtl" : "ltr"}>
+      <div className="countdown-card p-5 sm:p-8">
+        <div className="mb-5 flex items-center justify-center gap-2"><Timer className="size-5 text-primary" /><h2 className="text-xl font-medium sm:text-2xl">{t("focusSettings")}</h2></div>
+        <div className="flex flex-col items-center">
+          <div className="relative size-[250px] sm:size-[270px]" role="timer" aria-label={`${phaseLabel}: ${mins} ${t("minutesUnit")} ${secs}`}>
+            <svg className="size-full -rotate-90" viewBox="0 0 240 240" aria-hidden="true">
+              <circle cx="120" cy="120" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+              <motion.circle cx="120" cy="120" r={radius} fill="none" stroke={phaseColor} strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} animate={{ strokeDashoffset: circumference * (1 - progress / 100) }} transition={{ duration: 0.45, ease: "linear" }} />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <p className="text-xs sm:text-sm font-semibold text-muted-foreground mb-1">{phaseLabel}</p>
-              <p className="text-5xl sm:text-6xl font-black text-foreground tabular-nums">
-                {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {t("sessionOf")} {currentSession} {t("of")} {totalSessions}
-              </p>
+              <p className="mb-1 text-sm font-medium text-muted-foreground">{phaseLabel}</p>
+              <p className="font-display text-5xl font-semibold tabular-nums sm:text-6xl">{String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{t("sessionOf")} {currentSession} {t("of")} {totalSessions}</p>
             </div>
           </div>
+          <p className="mt-3 text-sm text-muted-foreground">{t("completedSessions")}: {completedSessions}</p>
         </div>
 
-        {/* Controls */}
-        <div className="flex justify-center gap-3 mb-8 flex-wrap">
-          {!running ? (
-            <button
-              onClick={handleStart}
-              className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:scale-105 transition-transform"
-            >
-              <Play className="w-4 h-4" />
-              {secondsLeft === phaseDuration(phase) ? t("start") : t("resume")}
-            </button>
-          ) : (
-            <button
-              onClick={handlePause}
-              className="bg-secondary text-secondary-foreground px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:scale-105 transition-transform"
-            >
-              <Pause className="w-4 h-4" />
-              {t("pause")}
-            </button>
-          )}
-          <button
-            onClick={handleSkip}
-            className="glass-effect text-foreground px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:scale-105 transition-transform"
-          >
-            <SkipForward className="w-4 h-4" />
-            {t("skip")}
-          </button>
-          <button
-            onClick={handleReset}
-            className="glass-effect text-foreground px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:scale-105 transition-transform"
-          >
-            <RotateCcw className="w-4 h-4" />
-            {t("reset")}
-          </button>
+        <div className="my-6 flex flex-wrap justify-center gap-3">
+          <Button onClick={() => setRunning((value) => !value)} disabled={running && secondsLeft === 0}>
+            {running ? <><Pause data-icon="inline-start" />{t("pause")}</> : <><Play data-icon="inline-start" />{secondsLeft < durationFor(phase) ? t("resume") : t("start")}</>}
+          </Button>
+          <Button variant="outline" onClick={skip}><SkipForward data-icon="inline-start" />{t("skip")}</Button>
+          <Button variant="ghost" onClick={reset}><RotateCcw data-icon="inline-start" />{t("reset")}</Button>
         </div>
 
-        {/* Settings */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="glass-effect rounded-xl p-4">
-            <label className="text-xs font-semibold text-muted-foreground block mb-2">
-              {t("workDuration")}: <span className="text-foreground">{workMin}</span>
+        <fieldset disabled={running} className="min-w-0 border-0 p-0">
+          <legend className="text-base font-medium">{t("focusSettings")}</legend>
+          <p className="mb-4 mt-1 text-sm text-muted-foreground">{t("durationHelp")}</p>
+          <WheelPicker columns={columns} disabled={running} value={values} onValueChange={updateSettings} label={t("focusSettings")} className="mx-auto max-w-sm bg-background/60" />
+          <div className="mt-2 grid grid-cols-4 gap-2 text-center text-[11px] text-muted-foreground sm:text-xs">
+            {["focusMinutes", "shortMinutes", "longMinutes", "totalSessions"].map((key) => <span key={key}>{t(key)}</span>)}
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-3 rounded-lg border border-border/70 p-3 text-sm">
+              <input type="checkbox" checked={autoBreaks} onChange={(event) => setAutoBreaks(event.target.checked)} className="size-4 accent-primary" />
+              <span>{t("autoBreaks")}</span>
             </label>
-            <input
-              type="range"
-              aria-label={t("workDuration")}
-              min={5}
-              max={60}
-              step={5}
-              value={workMin}
-              onChange={(e) => setWorkMin(Number(e.target.value))}
-              className="w-full accent-primary"
-              disabled={running}
-            />
-          </div>
-          <div className="glass-effect rounded-xl p-4">
-            <label className="text-xs font-semibold text-muted-foreground block mb-2">
-              {t("sessions")}: <span className="text-foreground">{totalSessions}</span>
+            <label className="flex items-center justify-between gap-3 rounded-lg border border-border/70 p-3 text-sm">
+              <span>{t("longEvery")}</span>
+              <select aria-label={t("longEvery")} value={longEvery} onChange={(event) => setLongEvery(Number(event.target.value))} className="rounded-md border border-input bg-background px-2 py-1 text-foreground">
+                {[2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value} {t("sessionUnit")}</option>)}
+              </select>
             </label>
-            <input
-              type="range"
-              aria-label={t("sessions")}
-              min={1}
-              max={10}
-              step={1}
-              value={totalSessions}
-              onChange={(e) => setTotalSessions(Number(e.target.value))}
-              className="w-full accent-primary"
-              disabled={running}
-            />
           </div>
-        </div>
-
-        {/* Suggested breaks */}
-        <div className="mt-4 glass-effect rounded-xl p-4">
-          <p className="text-xs font-semibold text-muted-foreground mb-2">{t("suggestedBreaks")}</p>
-          <div className="flex justify-around text-center">
-            <div>
-              <p className="text-xs text-muted-foreground">{t("shortBreak")}</p>
-              <p className="text-lg font-bold text-accent">
-                {effectiveShort} {t("minutes_short")}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">{t("longBreak")}</p>
-              <p className="text-lg font-bold text-primary">
-                {effectiveLong} {t("minutes_short")}
-              </p>
-            </div>
-          </div>
-        </div>
+        </fieldset>
+        <p className="mt-5 rounded-lg bg-secondary/60 px-4 py-3 text-sm leading-6 text-muted-foreground">{t("focusNote")} {t("localData")}</p>
       </div>
     </motion.section>
   );

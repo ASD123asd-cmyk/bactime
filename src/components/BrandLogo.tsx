@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import logoAsset from "@/assets/bactime-logo.png.asset.json";
 import iconAsset from "@/assets/bactime-icon.png.asset.json";
 
 interface BrandLogoProps {
@@ -15,7 +14,7 @@ const BrandLogo = ({ compact = false, className }: BrandLogoProps) =>
   compact ? (
     <BrandIcon className={cn("h-10 w-10", className)} />
   ) : (
-    <img src={logoAsset.url} alt="BacTime" width={1920} height={640} className={cn("h-11 w-auto object-contain", className)} />
+    <img src="/images/bactime-logo.webp" alt="BacTime" width={1920} height={640} className={cn("h-11 w-auto object-contain", className)} />
   );
 
 export default BrandLogo;

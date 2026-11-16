@@ -10,12 +10,14 @@ import BacCalculator from "./pages/BacCalculator";
 import Focus from "./pages/Focus";
 import AppShell from "./components/AppShell";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { MotionConfig } from "framer-motion";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
+      <MotionConfig reducedMotion="user">
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -32,6 +34,7 @@ const App = () => (
           </AppShell>
         </BrowserRouter>
       </TooltipProvider>
+      </MotionConfig>
     </LanguageProvider>
   </QueryClientProvider>
 );

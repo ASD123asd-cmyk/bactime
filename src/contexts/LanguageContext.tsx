@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { translations, type Language } from "@/lib/translations";
+import { interfaceCopy } from "@/lib/interface-copy";
 
 const STORAGE_KEY = "bactime-lang";
 
@@ -17,7 +18,7 @@ const getInitialLanguage = (): Language => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "ar" || saved === "fr" || saved === "en") return saved;
-  } catch {}
+  } catch { /* Browser storage is optional. */ }
   return "ar";
 };
 
@@ -31,7 +32,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.setAttribute("lang", lang);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
-    } catch {}
+    } catch { /* Browser storage is optional. */ }
   }, [lang, isRtl]);
 
   const value = useMemo<LanguageContextValue>(() => ({
@@ -39,7 +40,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setLang,
     isRtl,
     t: (key) => {
-      const value = translations[lang][key];
+      const value = interfaceCopy[lang][key] ?? translations[lang][key];
       return typeof value === "string" ? value : "";
     },
     arr: (key) => {
